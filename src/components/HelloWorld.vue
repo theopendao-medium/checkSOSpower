@@ -1,38 +1,24 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-    {{ret}}
+    <h1>Hi</h1>
+    <div>
+  <div class="form-group" :class="{ 'form-group--error': $v.infurakey.$error }">
+    <label class="form__label">infurakey</label>
+    <input @keyup="updateInfuraKey" class="form__input" v-model.trim="$v.infurakey.$model"/>
+  </div>
+  <div class="error" v-if="!$v.infurakey.required">Field is required</div>
+  <div class="error" v-if="!$v.infurakey.minLength">infurakey must have at least {{$v.infurakey.$params.minLength.min}} characters.</div>
+  <div class="error" v-if="!$v.infurakey.maxLength">infurakey cannot be more than {{$v.infurakey.$params.maxLength.max}} characters.</div>
+</div>
+<div>
+<button @click="checkbalance">Check ETH Balance</button>
+</div>
+    {{balEth}}
   </div>
 </template>
 
 <script>
-import getweb3 from '../utils/getWeb3.js'
+import { required, minLength, maxLength } from 'vuelidate/lib/validators'
 
 export default {
   name: 'HelloWorld',
@@ -41,15 +27,40 @@ export default {
   },
   data:function (){
     return {
-    ret: {},
-    test: "hello",
+      infurakey: "6ac4888a37b64ea3bcdeec85f63ec577",
+      ret: {},
+      test: "hello",
+      timer: undefined,
     }
   },
-  mounted() {
-    getweb3().then(response => {
-            console.log(response);
-            this.ret = response;
-        })
+  validations:{
+    infurakey: {
+      required,
+      minLength: minLength(32),
+      maxLength: maxLength(32)
+    }
+  },
+  computed: {
+    balEth(){
+      return this.$store.getters.ethBalance();
+    }
+  },
+  methods:{
+    updateInfuraKey: function(){
+      clearTimeout(this.timer);
+
+      this.timer = setTimeout(() => {
+        console.log("updated");
+          this.$store.dispatch('changeInfuraKey', this.infurakey);
+      }, 1000)
+      
+    },
+    checkbalance: function(){
+      this.$store.dispatch('getEthBalance');
+    }
+  },
+  mounted: function() {
+    
   }
 }
 </script>
